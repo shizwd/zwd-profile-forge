@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ 个人主页 · 自定义 + 导入导出</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(145deg, #f9faff 0%, #eef2f8 100%);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      transition: background 0.3s ease;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(0px);
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    body.has-bg-image::before {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(1px);
+    }
+
+    .profile-card {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 2.5rem;
+      box-shadow: 0 30px 50px -20px rgba(0, 20, 30, 0.2),
+                  inset 0 1px 3px rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      padding: 2.5rem;
+      transition: all 0.2s ease;
+    }
+
+    body.has-bg-image .profile-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+
+    [contenteditable="true"] {
+      outline: none;
+      border-radius: 8px;
+      transition: background 0.2s, box-shadow 0.2s;
+      cursor: text;
+      padding: 0.15rem 0.3rem;
+      margin: 0 -0.3rem;
+    }
+
+    [contenteditable="true"]:hover {
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 0 1px rgba(150, 180, 210, 0.4);
+    }
+
+    [contenteditable="true"]:focus {
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 0 2px #3b7cbf, 0 4px 12px rgba(59, 124, 191, 0.15);
+      color: #0a1e2b;
+    }
+
+    .profile-grid {
+      display: flex;
+      flex-direction: row;
+      gap: 2.5rem;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 768px) {
+      .profile-grid {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.8rem;
+      }
+      .profile-card {
+        padding: 1.8rem;
+      }
+    }
+
+    .avatar-section {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #d4e0f0, #b6c8e0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 15px 25px -8px rgba(30, 50, 70, 0.2);
+      transition: transform 0.2s;
+      border: 3px solid white;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .avatar-wrapper:hover {
+      transform: scale(1.02);
+    }
+
+    .avatar-content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.5rem;
+      font-weight: 500;
+      color: #2f4d6e;
+      background: #e3ecf7;
+      text-transform: uppercase;
+      transition: background 0.3s;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .avatar-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .avatar-hint {
+      font-size: 0.75rem;
+      color: #6a7f94;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: rgba(255, 255, 255, 0.75);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+      margin-top: 0.3rem;
+      border: 1px solid rgba(200, 215, 230, 0.8);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .avatar-hint:hover {
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .avatar-hint i {
+      font-size: 0.7rem;
+      color: #3b7cbf;
+    }
+
+    #avatarUpload, #bgUpload, #importFileInput {
+      display: none;
+    }
+
+    .main-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      width: 100%;
+    }
+
+    .name-title {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .name {
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: #132433;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #3b6f9c;
+      background: rgba(59, 124, 191, 0.1);
+      display: inline-block;
+      padding: 0.2rem 0.9rem;
+      border-radius: 30px;
+      width: fit-content;
+      backdrop-filter: blur(4px);
+    }
+
+    .bio {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: #1e3347;
+      background: rgba(255, 255, 255, 0.35);
+      padding: 1.2rem 1.4rem;
+      border-radius: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+      transition: all 0.2s;
+    }
+
+    .info-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      color: #2b4b6a;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.35);
+      padding: 1rem 1.4rem;
+      border-radius: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .info-item i {
+      color: #3b7cbf;
+      width: 1.2rem;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .links-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .links-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #557da0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .links-title i {
+      font-size: 1rem;
+      color: #3b7cbf;
+    }
+
+    .social-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .social-link-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .social-link {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.7rem 1.3rem;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 40px;
+      text-decoration: none;
+      color: #1e3347;
+      font-weight: 500;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(220, 232, 245, 0.6);
+      transition: all 0.2s;
+      backdrop-filter: blur(4px);
+    }
+
+    .social-link i {
+      font-size: 1.1rem;
+      color: #3b7cbf;
+      transition: color 0.2s;
+      pointer-events: none;
+    }
+
+    .social-link:hover {
+      background: rgba(240, 246, 254, 0.9);
+      border-color: #b8d1e9;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 18px -10px rgba(59, 124, 191, 0.3);
+    }
+
+    .social-link .link-text {
+      outline: none;
+      border-radius: 4px;
+      transition: background 0.2s;
+      cursor: text;
+      padding: 0.15rem 0.2rem;
+      margin: -0.15rem -0.2rem;
+    }
+
+    .social-link .link-text:hover {
+      background: rgba(200, 220, 240, 0.4);
+    }
+
+    .social-link .link-text:focus {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 0 0 2px #3b7cbf;
+    }
+
+    .social-link-remove {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1.5px solid #d0dde9;
+      color: #8aa3bc;
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      z-index: 2;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .social-link-wrapper:hover .social-link-remove {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .social-link-remove:hover {
+      background: #e74c3c;
+      border-color: #e74c3c;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .projects-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 0.8rem;
+    }
+
+    .projects-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .project-item {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      background: rgba(255, 255, 255, 0.45);
+      border-radius: 1.2rem;
+      padding: 0.9rem 1.2rem;
+      border: 1px solid rgba(220, 232, 245, 0.6);
+      transition: all 0.2s;
+      backdrop-filter: blur(4px);
+    }
+
+    .project-item:hover {
+      background: rgba(255, 255, 255, 0.75);
+      border-color: #b8d1e9;
+      transform: translateX(4px);
+    }
+
+    .project-icon {
+      color: #3b7cbf;
+      font-size: 1.1rem;
+      margin-top: 0.2rem;
+      flex-shrink: 0;
+      width: 1.5rem;
+      text-align: center;
+    }
+
+    .project-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      min-width: 0;
+    }
+
+    .project-name {
+      font-weight: 600;
+      color: #1e3347;
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+
+    .project-name a {
+      color: #1e3347;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .project-name a:hover {
+      color: #3b7cbf;
+      text-decoration: underline;
+    }
+
+    .project-desc {
+      font-size: 0.88rem;
+      color: #557da0;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    .project-url {
+      font-size: 0.78rem;
+      color: #8aa3bc;
+      word-break: break-all;
+      margin-top: 0.1rem;
+    }
+
+    .project-remove {
+      background: transparent;
+      border: none;
+      color: #b0c4d8;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .project-remove:hover {
+      color: #e74c3c;
+      background: rgba(231, 76, 60, 0.08);
+    }
+
+    .friends-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 0.8rem;
+    }
+
+    .friends-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+
+    .friend-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .friend-link {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 1.1rem;
+      background: rgba(255, 255, 255, 0.55);
+      border-radius: 30px;
+      text-decoration: none;
+      color: #1e3347;
+      font-weight: 500;
+      font-size: 0.88rem;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(220, 232, 245, 0.6);
+      transition: all 0.2s;
+      backdrop-filter: blur(4px);
+    }
+
+    .friend-link i {
+      font-size: 0.95rem;
+      color: #3b7cbf;
+      pointer-events: none;
+    }
+
+    .friend-link:hover {
+      background: rgba(240, 246, 254, 0.9);
+      border-color: #b8d1e9;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 14px -8px rgba(59, 124, 191, 0.3);
+    }
+
+    .friend-link .link-text {
+      outline: none;
+      border-radius: 4px;
+      transition: background 0.2s;
+      cursor: text;
+      padding: 0.1rem 0.2rem;
+      margin: -0.1rem -0.2rem;
+    }
+
+    .friend-link .link-text:hover {
+      background: rgba(200, 220, 240, 0.4);
+    }
+
+    .friend-link .link-text:focus {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 0 0 2px #3b7cbf;
+    }
+
+    .friend-remove {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1.5px solid #d0dde9;
+      color: #8aa3bc;
+      font-size: 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      z-index: 2;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .friend-wrapper:hover .friend-remove {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .friend-remove:hover {
+      background: #e74c3c;
+      border-color: #e74c3c;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+
+    .add-link-btn,
+    .save-html-btn,
+    .add-project-btn,
+    .add-friend-btn,
+    .upload-bg-btn,
+    .import-html-btn {
+      background: transparent;
+      border: 1.5px dashed #a0bbd4;
+      color: #3b6f9c;
+      padding: 0.7rem 1.4rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: fit-content;
+    }
+
+    .add-link-btn:hover,
+    .add-project-btn:hover,
+    .add-friend-btn:hover,
+    .upload-bg-btn:hover,
+    .import-html-btn:hover {
+      background: rgba(59, 124, 191, 0.06);
+      border-color: #3b7cbf;
+      color: #1d4d78;
+    }
+
+    .save-html-btn {
+      border: 1.5px solid #3b7cbf;
+      background: #3b7cbf;
+      color: white;
+      padding: 0.7rem 1.8rem;
+      font-weight: 600;
+      border-radius: 40px;
+      border-style: solid;
+      box-shadow: 0 8px 16px -6px rgba(59, 124, 191, 0.4);
+    }
+
+    .save-html-btn:hover {
+      background: #2a5f94;
+      border-color: #2a5f94;
+      transform: translateY(-2px);
+    }
+
+    /* ★ 导入按钮样式 */
+    .import-html-btn {
+      border-style: solid;
+      border-color: #4c9a6b;
+      color: #3d7a55;
+      padding: 0.7rem 1.6rem;
+      font-weight: 600;
+    }
+
+    .import-html-btn:hover {
+      background: rgba(76, 154, 107, 0.08);
+      border-color: #3d7a55;
+      color: #2e5e3f;
+    }
+
+    .upload-bg-btn {
+      border-style: solid;
+      border-color: #d0dde9;
+      color: #557da0;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+    }
+
+    .upload-bg-btn:hover {
+      border-color: #3b7cbf;
+      background: rgba(59, 124, 191, 0.04);
+    }
+
+    .save-hint {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: #68829b;
+      margin-top: 1.8rem;
+      border-top: 1px solid rgba(180, 200, 220, 0.3);
+      padding-top: 1.2rem;
+      letter-spacing: 0.2px;
+    }
+
+    .save-hint i {
+      color: #4c9a6b;
+      font-size: 0.9rem;
+    }
+
+    .link-edit-badge {
+      font-size: 0.65rem;
+      background: rgba(59, 124, 191, 0.12);
+      color: #2a5f94;
+      border-radius: 10px;
+      padding: 0.15rem 0.5rem;
+      margin-left: 0.4rem;
+      pointer-events: none;
+    }
+
+    /* ========== 弹窗通用样式 ========== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(20, 35, 50, 0.35);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-box {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 2rem;
+      padding: 2.2rem 2.5rem;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 30px 60px -20px rgba(0, 20, 30, 0.4),
+                  0 0 0 1px rgba(255, 255, 255, 0.8);
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-box h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #132433;
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .modal-box h3 i {
+      color: #3b7cbf;
+      font-size: 1.1rem;
+    }
+
+    .modal-subtitle {
+      font-size: 0.85rem;
+      color: #7b93ac;
+      margin-bottom: 1.5rem;
+      font-weight: 400;
+    }
+
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .modal-field label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #3b6f9c;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-field input,
+    .modal-field textarea {
+      width: 100%;
+      padding: 0.75rem 1.1rem;
+      border-radius: 14px;
+      border: 1.5px solid #d8e3ef;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      color: #1e3347;
+      background: #f8fafd;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .modal-field textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .modal-field input:focus,
+    .modal-field textarea:focus {
+      border-color: #3b7cbf;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(59, 124, 191, 0.12);
+    }
+
+    .modal-field input::placeholder,
+    .modal-field textarea::placeholder {
+      color: #a8bdd2;
+      font-weight: 400;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: flex-end;
+      margin-top: 1.8rem;
+    }
+
+    .modal-btn {
+      padding: 0.7rem 1.6rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-btn-cancel {
+      background: #f0f4f9;
+      color: #557da0;
+      border: 1.5px solid transparent;
+    }
+
+    .modal-btn-cancel:hover {
+      background: #e6ecf5;
+      color: #3b6f9c;
+    }
+
+    .modal-btn-confirm {
+      background: #3b7cbf;
+      color: white;
+      box-shadow: 0 8px 18px -8px rgba(59, 124, 191, 0.6);
+    }
+
+    .modal-btn-confirm:hover {
+      background: #2a5f94;
+      transform: translateY(-1px);
+      box-shadow: 0 12px 22px -8px rgba(59, 124, 191, 0.7);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.4rem;
+      background: transparent;
+      border: none;
+      color: #a8bdd2;
+      font-size: 1.1rem;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #f0f4f9;
+      color: #557da0;
+    }
+
+    /* 只读模式样式 */
+    .read-only [contenteditable="true"] {
+      cursor: default;
+      pointer-events: none;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    .read-only .avatar-wrapper {
+      cursor: default;
+    }
+
+    .read-only .avatar-hint,
+    .read-only .add-link-btn,
+    .read-only .add-project-btn,
+    .read-only .add-friend-btn,
+    .read-only .save-html-btn,
+    .read-only .import-html-btn,
+    .read-only .project-remove,
+    .read-only .social-link-remove,
+    .read-only .friend-remove,
+    .read-only .upload-bg-btn {
+      display: none !important;
+    }
+
+    .read-only .social-link .link-text,
+    .read-only .friend-link .link-text {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .read-only .project-name a {
+      pointer-events: auto;
+    }
+
+    .read-only .save-hint {
+      justify-content: center;
+    }
+
+    .top-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-card" id="profileCard">
+    <div class="top-toolbar">
+      <button class="upload-bg-btn" id="uploadBgBtn">
+        <i class="fas fa-image"></i> 更换背景
+      </button>
+      <input type="file" id="bgUpload" accept="image/*">
+    </div>
+
+    <div class="profile-grid">
+      <div class="avatar-section">
+        <div class="avatar-wrapper" id="avatarWrapper">
+          <div class="avatar-content" id="avatarContent">A</div>
+        </div>
+        <div class="avatar-hint" id="uploadHint">
+          <i class="fas fa-camera"></i> 上传头像
+        </div>
+        <input type="file" id="avatarUpload" accept="image/*">
+      </div>
+
+      <div class="main-info">
+        <div class="name-title">
+          <div class="name" id="name" contenteditable="true" spellcheck="false">Alex Chen</div>
+          <div class="title" id="title" contenteditable="true" spellcheck="false">产品设计师 & 开发者</div>
+        </div>
+
+        <div class="bio" id="bio" contenteditable="true" spellcheck="false">
+          热爱创造简洁优雅的数字产品。喜欢探索设计系统、前端技术和咖啡。目前正在构建一些有趣的小工具。
+        </div>
+
+        <div class="info-row" id="infoRow">
+          <div class="info-item">
+            <i class="fas fa-location-dot"></i>
+            <span contenteditable="true" spellcheck="false" id="location">上海, 中国</span>
+          </div>
+          <div class="info-item">
+            <i class="fas fa-globe"></i>
+            <span contenteditable="true" spellcheck="false" id="website">alexchen.design</span>
+          </div>
+          <div class="info-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span contenteditable="true" spellcheck="false" id="joinDate">2025年3月</span>
+          </div>
+        </div>
+
+        <!-- 社交链接区域 -->
+        <div class="links-section">
+          <div class="links-title">
+            <i class="fas fa-link"></i> 社交与链接
+            <span class="link-edit-badge">点击文字可编辑 · 悬浮显示删除</span>
+          </div>
+          <div class="social-links" id="socialLinksContainer"></div>
+          <button class="add-link-btn" id="addLinkBtn">
+            <i class="fas fa-plus-circle"></i> 添加自定义链接
+          </button>
+        </div>
+
+        <!-- 项目区域 -->
+        <div class="projects-section">
+          <div class="links-title">
+            <i class="fas fa-code-branch"></i> 项目
+            <span class="link-edit-badge">点击名称/描述可编辑 · 点击链接图标跳转</span>
+          </div>
+          <div class="projects-list" id="projectsList"></div>
+          <button class="add-project-btn" id="addProjectBtn">
+            <i class="fas fa-plus-circle"></i> 添加项目
+          </button>
+        </div>
+
+        <!-- 友链区域 -->
+        <div class="friends-section">
+          <div class="links-title">
+            <i class="fas fa-user-group"></i> 友链
+            <span class="link-edit-badge">点击文字可编辑 · 悬浮显示删除</span>
+          </div>
+          <div class="friends-list" id="friendsList"></div>
+          <button class="add-friend-btn" id="addFriendBtn">
+            <i class="fas fa-plus-circle"></i> 添加友链
+          </button>
+        </div>
+
+        <!-- ★ 按钮行：保存 + 导入 ★ -->
+        <div class="button-row" style="margin-top:1.2rem;">
+          <button class="save-html-btn" id="saveHtmlBtn">
+            <i class="fas fa-download"></i> 保存为只读HTML文件
+          </button>
+          <button class="import-html-btn" id="importHtmlBtn">
+            <i class="fas fa-file-import"></i> 导入HTML文件
+          </button>
+          <input type="file" id="importFileInput" accept=".html,.htm,text/html">
+        </div>
+
+        <div class="save-hint" id="saveHint">
+          <i class="fas fa-cloud-upload-alt"></i> 所有修改自动保存到本地，点击“保存为只读HTML”下载
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ 添加链接弹窗 ★ -->
+  <div class="modal-overlay" id="linkModal">
+    <div class="modal-box">
+      <button class="modal-close" id="modalCloseBtn" title="关闭">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3><i class="fas fa-link"></i> 添加自定义链接</h3>
+      <p class="modal-subtitle">填写链接地址和显示文本，点击确认即可添加</p>
+
+      <div class="modal-field">
+        <label for="linkUrlInput">链接地址 (URL)</label>
+        <input type="url" id="linkUrlInput" placeholder="https://example.com" value="https://" autocomplete="off">
+      </div>
+
+      <div class="modal-field">
+        <label for="linkTextInput">显示文本</label>
+        <input type="text" id="linkTextInput" placeholder="例如：我的博客" autocomplete="off">
+      </div>
+
+      <div class="modal-field">
+        <label for="linkIconInput">图标 (可选，Font Awesome 类名)</label>
+        <input type="text" id="linkIconInput" placeholder="例如：fas fa-globe" value="fas fa-link" autocomplete="off">
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">
+          <i class="fas fa-times"></i> 取消
+        </button>
+        <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">
+          <i class="fas fa-check"></i> 确认添加
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ 添加项目弹窗 ★ -->
+  <div class="modal-overlay" id="projectModal">
+    <div class="modal-box">
+      <button class="modal-close" id="projectModalCloseBtn" title="关闭">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3><i class="fas fa-code-branch"></i> 添加项目</h3>
+      <p class="modal-subtitle">填写项目信息，点击确认即可添加到项目列表</p>
+
+      <div class="modal-field">
+        <label for="projectNameInput">项目名称</label>
+        <input type="text" id="projectNameInput" placeholder="例如：我的开源项目" autocomplete="off">
+      </div>
+
+      <div class="modal-field">
+        <label for="projectUrlInput">项目链接 (URL)</label>
+        <input type="url" id="projectUrlInput" placeholder="https://github.com/..." value="https://" autocomplete="off">
+      </div>
+
+      <div class="modal-field">
+        <label for="projectDescInput">项目描述</label>
+        <textarea id="projectDescInput" placeholder="简单描述一下这个项目..."></textarea>
+      </div>
+
+      <div class="modal-field">
+        <label for="projectIconInput">图标 (Font Awesome 类名)</label>
+        <input type="text" id="projectIconInput" placeholder="例如：fas fa-cube" value="fas fa-cube" autocomplete="off">
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="projectModalCancelBtn">
+          <i class="fas fa-times"></i> 取消
+        </button>
+        <button class="modal-btn modal-btn-confirm" id="projectModalConfirmBtn">
+          <i class="fas fa-check"></i> 确认添加
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ 添加友链弹窗 ★ -->
+  <div class="modal-overlay" id="friendModal">
+    <div class="modal-box">
+      <button class="modal-close" id="friendModalCloseBtn" title="关闭">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3><i class="fas fa-user-group"></i> 添加友链</h3>
+      <p class="modal-subtitle">填写友链地址和显示文本，点击确认即可添加</p>
+
+      <div class="modal-field">
+        <label for="friendUrlInput">友链地址 (URL)</label>
+        <input type="url" id="friendUrlInput" placeholder="https://example.com" value="https://" autocomplete="off">
+      </div>
+
+      <div class="modal-field">
+        <label for="friendTextInput">显示文本</label>
+        <input type="text" id="friendTextInput" placeholder="例如：小明的博客" autocomplete="off">
+      </div>
+
+      <div class="modal-field">
+        <label for="friendIconInput">图标 (可选，Font Awesome 类名)</label>
+        <input type="text" id="friendIconInput" placeholder="例如：fas fa-user" value="fas fa-user" autocomplete="off">
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="friendModalCancelBtn">
+          <i class="fas fa-times"></i> 取消
+        </button>
+        <button class="modal-btn modal-btn-confirm" id="friendModalConfirmBtn">
+          <i class="fas fa-check"></i> 确认添加
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const STORAGE_KEY = 'custom_profile_page_data_v11';
+
+      // DOM 元素
+      const avatarContent = document.getElementById('avatarContent');
+      const avatarWrapper = document.getElementById('avatarWrapper');
+      const uploadHint = document.getElementById('uploadHint');
+      const avatarUpload = document.getElementById('avatarUpload');
+      const bgUpload = document.getElementById('bgUpload');
+      const uploadBgBtn = document.getElementById('uploadBgBtn');
+      const nameEl = document.getElementById('name');
+      const titleEl = document.getElementById('title');
+      const bioEl = document.getElementById('bio');
+      const locationEl = document.getElementById('location');
+      const websiteEl = document.getElementById('website');
+      const joinDateEl = document.getElementById('joinDate');
+      const socialLinksContainer = document.getElementById('socialLinksContainer');
+      const addLinkBtn = document.getElementById('addLinkBtn');
+      const saveHtmlBtn = document.getElementById('saveHtmlBtn');
+      const importHtmlBtn = document.getElementById('importHtmlBtn');
+      const importFileInput = document.getElementById('importFileInput');
+      const projectsList = document.getElementById('projectsList');
+      const addProjectBtn = document.getElementById('addProjectBtn');
+      const friendsList = document.getElementById('friendsList');
+      const addFriendBtn = document.getElementById('addFriendBtn');
+      const saveHint = document.getElementById('saveHint');
+
+      // 链接弹窗元素
+      const linkModal = document.getElementById('linkModal');
+      const modalCloseBtn = document.getElementById('modalCloseBtn');
+      const modalCancelBtn = document.getElementById('modalCancelBtn');
+      const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+      const linkUrlInput = document.getElementById('linkUrlInput');
+      const linkTextInput = document.getElementById('linkTextInput');
+      const linkIconInput = document.getElementById('linkIconInput');
+
+      // 项目弹窗元素
+      const projectModal = document.getElementById('projectModal');
+      const projectModalCloseBtn = document.getElementById('projectModalCloseBtn');
+      const projectModalCancelBtn = document.getElementById('projectModalCancelBtn');
+      const projectModalConfirmBtn = document.getElementById('projectModalConfirmBtn');
+      const projectNameInput = document.getElementById('projectNameInput');
+      const projectUrlInput = document.getElementById('projectUrlInput');
+      const projectDescInput = document.getElementById('projectDescInput');
+      const projectIconInput = document.getElementById('projectIconInput');
+
+      // 友链弹窗元素
+      const friendModal = document.getElementById('friendModal');
+      const friendModalCloseBtn = document.getElementById('friendModalCloseBtn');
+      const friendModalCancelBtn = document.getElementById('friendModalCancelBtn');
+      const friendModalConfirmBtn = document.getElementById('friendModalConfirmBtn');
+      const friendUrlInput = document.getElementById('friendUrlInput');
+      const friendTextInput = document.getElementById('friendTextInput');
+      const friendIconInput = document.getElementById('friendIconInput');
+
+      let avatarImageData = null;
+      let backgroundImageData = null;
+
+      // ================= 图片压缩工具 =================
+      function compressImage(file, maxWidth, maxHeight, quality) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              let width = img.width;
+              let height = img.height;
+
+              if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width = Math.round(width * ratio);
+                height = Math.round(height * ratio);
+              }
+
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+              resolve(compressedDataUrl);
+            };
+            img.onerror = () => reject(new Error('图片加载失败'));
+            img.src = e.target.result;
+          };
+          reader.onerror = () => reject(new Error('文件读取失败'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // ================= 数据收集 =================
+      function collectSocialLinks() {
+        const links = [];
+        document.querySelectorAll('#socialLinksContainer .social-link').forEach(link => {
+          const linkTextSpan = link.querySelector('.link-text');
+          const text = linkTextSpan ? linkTextSpan.innerText.trim() : '';
+          const iconEl = link.querySelector('i');
+          const icon = iconEl ? iconEl.className : 'fas fa-link';
+          let url = link.getAttribute('href') || link.getAttribute('data-url') || '#';
+          if (url === 'javascript:void(0)' || url === '#') url = link.getAttribute('data-url') || '#';
+          links.push({ text, icon, url });
+        });
+        return links;
+      }
+
+      function collectProjects() {
+        const projects = [];
+        document.querySelectorAll('#projectsList .project-item').forEach(item => {
+          const nameLink = item.querySelector('.project-name a');
+          const name = nameLink ? nameLink.innerText.trim() : '';
+          const url = nameLink ? nameLink.getAttribute('href') : '#';
+          const descEl = item.querySelector('.project-desc');
+          const desc = descEl ? descEl.innerText.trim() : '';
+          const iconEl = item.querySelector('.project-icon i');
+          const icon = iconEl ? iconEl.className : 'fas fa-cube';
+          projects.push({ name, url, desc, icon });
+        });
+        return projects;
+      }
+
+      function collectFriends() {
+        const friends = [];
+        document.querySelectorAll('#friendsList .friend-link').forEach(link => {
+          const linkTextSpan = link.querySelector('.link-text');
+          const text = linkTextSpan ? linkTextSpan.innerText.trim() : '';
+          const iconEl = link.querySelector('i');
+          const icon = iconEl ? iconEl.className : 'fas fa-user';
+          let url = link.getAttribute('href') || link.getAttribute('data-url') || '#';
+          if (url === 'javascript:void(0)' || url === '#') url = link.getAttribute('data-url') || '#';
+          friends.push({ text, icon, url });
+        });
+        return friends;
+      }
+
+      function saveProfile() {
+        try {
+          const data = {
+            avatar: avatarContent.innerText.trim() || 'A',
+            avatarImage: avatarImageData,
+            backgroundImage: backgroundImageData,
+            name: nameEl.innerText.trim() || '姓名',
+            title: titleEl.innerText.trim() || '头衔',
+            bio: bioEl.innerText.trim() || '简介',
+            location: locationEl.innerText.trim() || '地点',
+            website: websiteEl.innerText.trim() || '网站',
+            joinDate: joinDateEl.innerText.trim() || '日期',
+            socialLinks: collectSocialLinks(),
+            projects: collectProjects(),
+            friends: collectFriends()
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+          console.warn('保存失败（可能是存储空间不足）:', e);
+        }
+      }
+
+      let saveTimeout;
+      function debouncedSave() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveProfile, 300);
+      }
+
+      // ================= 渲染 =================
+      function applyBackground(dataUrl) {
+        if (dataUrl) {
+          document.body.style.backgroundImage = `url(${dataUrl})`;
+          document.body.classList.add('has-bg-image');
+        } else {
+          document.body.style.backgroundImage = '';
+          document.body.classList.remove('has-bg-image');
+        }
+      }
+
+      function renderAvatar(data) {
+        if (data.avatarImage) {
+          avatarImageData = data.avatarImage;
+          avatarContent.innerHTML = '';
+          const img = document.createElement('img');
+          img.src = data.avatarImage;
+          img.className = 'avatar-image';
+          img.alt = '头像';
+          avatarContent.appendChild(img);
+          avatarContent.style.display = 'block';
+          avatarContent.setAttribute('contenteditable', 'false');
+        } else {
+          avatarImageData = null;
+          avatarContent.innerHTML = '';
+          avatarContent.innerText = data.avatar || 'A';
+          avatarContent.style.display = 'flex';
+          avatarContent.setAttribute('contenteditable', 'true');
+        }
+      }
+
+      function renderSocialLinks(links) {
+        socialLinksContainer.innerHTML = '';
+        if (!links || !links.length) {
+          links = [
+            { text: '@alexchen', icon: 'fab fa-twitter', url: 'https://twitter.com' },
+            { text: 'alex-chen', icon: 'fab fa-github', url: 'https://github.com' },
+            { text: 'alex-chen-design', icon: 'fab fa-linkedin-in', url: 'https://linkedin.com' }
+          ];
+        }
+        links.forEach(link => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'social-link-wrapper';
+          const a = document.createElement('a');
+          a.href = link.url || '#';
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.className = 'social-link';
+          a.setAttribute('data-url', link.url || '#');
+          const icon = document.createElement('i');
+          icon.className = link.icon || 'fas fa-link';
+          icon.style.pointerEvents = 'auto';
+          a.appendChild(icon);
+          const span = document.createElement('span');
+          span.className = 'link-text';
+          span.setAttribute('contenteditable', 'true');
+          span.setAttribute('spellcheck', 'false');
+          span.innerText = link.text || '链接';
+          a.appendChild(span);
+          wrapper.appendChild(a);
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'social-link-remove';
+          removeBtn.title = '删除此链接';
+          removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+          wrapper.appendChild(removeBtn);
+          socialLinksContainer.appendChild(wrapper);
+        });
+      }
+
+      function renderProjects(projects) {
+        projectsList.innerHTML = '';
+        if (!projects || !projects.length) {
+          projects = [
+            { name: '设计系统工具包', url: 'https://github.com/alexchen/design-system', desc: '一个开源的 Figma + 代码设计系统，包含 tokens 和组件库。', icon: 'fas fa-cube' },
+            { name: '轻量分析面板', url: 'https://github.com/alexchen/analytics-dash', desc: '基于 Vue 3 和 D3 的实时数据可视化仪表板。', icon: 'fas fa-chart-line' }
+          ];
+        }
+        projects.forEach(proj => {
+          const item = document.createElement('div');
+          item.className = 'project-item';
+          const iconDiv = document.createElement('div');
+          iconDiv.className = 'project-icon';
+          const iconI = document.createElement('i');
+          iconI.className = proj.icon || 'fas fa-cube';
+          iconDiv.appendChild(iconI);
+          const contentDiv = document.createElement('div');
+          contentDiv.className = 'project-content';
+          const nameDiv = document.createElement('div');
+          nameDiv.className = 'project-name';
+          const nameLink = document.createElement('a');
+          nameLink.href = proj.url || '#';
+          nameLink.target = '_blank';
+          nameLink.rel = 'noopener';
+          nameLink.setAttribute('contenteditable', 'true');
+          nameLink.setAttribute('spellcheck', 'false');
+          nameLink.innerText = proj.name || '项目名称';
+          nameDiv.appendChild(nameLink);
+          const descDiv = document.createElement('div');
+          descDiv.className = 'project-desc';
+          descDiv.setAttribute('contenteditable', 'true');
+          descDiv.setAttribute('spellcheck', 'false');
+          descDiv.innerText = proj.desc || '项目描述';
+          const urlDiv = document.createElement('div');
+          urlDiv.className = 'project-url';
+          urlDiv.innerHTML = `<i class="fas fa-link" style="font-size:0.7rem;"></i> ${escapeHtml(proj.url || '')}`;
+          contentDiv.appendChild(nameDiv);
+          contentDiv.appendChild(descDiv);
+          contentDiv.appendChild(urlDiv);
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'project-remove';
+          removeBtn.title = '删除项目';
+          removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+          item.appendChild(iconDiv);
+          item.appendChild(contentDiv);
+          item.appendChild(removeBtn);
+          projectsList.appendChild(item);
+        });
+      }
+
+      function renderFriends(friends) {
+        friendsList.innerHTML = '';
+        if (!friends || !friends.length) {
+          friends = [
+            { text: '小明的博客', icon: 'fas fa-user', url: 'https://example.com' },
+            { text: '设计日报', icon: 'fas fa-pen-fancy', url: 'https://example.com' }
+          ];
+        }
+        friends.forEach(friend => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'friend-wrapper';
+          const a = document.createElement('a');
+          a.href = friend.url || '#';
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.className = 'friend-link';
+          a.setAttribute('data-url', friend.url || '#');
+          const icon = document.createElement('i');
+          icon.className = friend.icon || 'fas fa-user';
+          icon.style.pointerEvents = 'auto';
+          a.appendChild(icon);
+          const span = document.createElement('span');
+          span.className = 'link-text';
+          span.setAttribute('contenteditable', 'true');
+          span.setAttribute('spellcheck', 'false');
+          span.innerText = friend.text || '友链';
+          a.appendChild(span);
+          wrapper.appendChild(a);
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'friend-remove';
+          removeBtn.title = '删除此友链';
+          removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+          wrapper.appendChild(removeBtn);
+          friendsList.appendChild(wrapper);
+        });
+      }
+
+      function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/[&<>"]/g, function(m) {
+          if (m === '&') return '&amp;';
+          if (m === '<') return '&lt;';
+          if (m === '>') return '&gt;';
+          if (m === '"') return '&quot;';
+          return m;
+        });
+      }
+
+      // ================= 链接弹窗控制 =================
+      function openLinkModal() {
+        linkUrlInput.value = 'https://';
+        linkTextInput.value = '';
+        linkIconInput.value = 'fas fa-link';
+        linkModal.classList.add('active');
+        setTimeout(() => linkTextInput.focus(), 100);
+      }
+
+      function closeLinkModal() {
+        linkModal.classList.remove('active');
+      }
+
+      function confirmAddLink() {
+        let url = linkUrlInput.value.trim();
+        const text = linkTextInput.value.trim();
+        const icon = linkIconInput.value.trim() || 'fas fa-link';
+
+        if (!url || url === 'https://' || url === 'http://') {
+          alert('请输入有效的链接地址');
+          linkUrlInput.focus();
+          return;
+        }
+        if (!text) {
+          alert('请输入显示文本');
+          linkTextInput.focus();
+          return;
+        }
+
+        if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) {
+          url = 'https://' + url;
+        }
+
+        const current = collectSocialLinks();
+        current.push({ text, icon, url });
+        renderSocialLinks(current);
+        saveProfile();
+        closeLinkModal();
+      }
+
+      // ================= 项目弹窗控制 =================
+      function openProjectModal() {
+        projectNameInput.value = '';
+        projectUrlInput.value = 'https://';
+        projectDescInput.value = '';
+        projectIconInput.value = 'fas fa-cube';
+        projectModal.classList.add('active');
+        setTimeout(() => projectNameInput.focus(), 100);
+      }
+
+      function closeProjectModal() {
+        projectModal.classList.remove('active');
+      }
+
+      function confirmAddProject() {
+        let url = projectUrlInput.value.trim();
+        const name = projectNameInput.value.trim();
+        const desc = projectDescInput.value.trim();
+        const icon = projectIconInput.value.trim() || 'fas fa-cube';
+
+        if (!name) {
+          alert('请输入项目名称');
+          projectNameInput.focus();
+          return;
+        }
+        if (!url || url === 'https://' || url === 'http://') {
+          alert('请输入有效的项目链接');
+          projectUrlInput.focus();
+          return;
+        }
+
+        if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) {
+          url = 'https://' + url;
+        }
+
+        const current = collectProjects();
+        current.push({ name, url, desc, icon });
+        renderProjects(current);
+        saveProfile();
+        closeProjectModal();
+      }
+
+      // ================= 友链弹窗控制 =================
+      function openFriendModal() {
+        friendUrlInput.value = 'https://';
+        friendTextInput.value = '';
+        friendIconInput.value = 'fas fa-user';
+        friendModal.classList.add('active');
+        setTimeout(() => friendTextInput.focus(), 100);
+      }
+
+      function closeFriendModal() {
+        friendModal.classList.remove('active');
+      }
+
+      function confirmAddFriend() {
+        let url = friendUrlInput.value.trim();
+        const text = friendTextInput.value.trim();
+        const icon = friendIconInput.value.trim() || 'fas fa-user';
+
+        if (!url || url === 'https://' || url === 'http://') {
+          alert('请输入有效的友链地址');
+          friendUrlInput.focus();
+          return;
+        }
+        if (!text) {
+          alert('请输入显示文本');
+          friendTextInput.focus();
+          return;
+        }
+
+        if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) {
+          url = 'https://' + url;
+        }
+
+        const current = collectFriends();
+        current.push({ text, icon, url });
+        renderFriends(current);
+        saveProfile();
+        closeFriendModal();
+      }
+
+      // ================= 加载 =================
+      function loadProfile() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        let data = null;
+        if (stored) {
+          try { data = JSON.parse(stored); } catch (e) { console.warn('读取失败', e); }
+        }
+
+        if (!data) {
+          data = {
+            avatar: 'A',
+            avatarImage: null,
+            backgroundImage: null,
+            name: 'Alex Chen',
+            title: '产品设计师 & 开发者',
+            bio: '热爱创造简洁优雅的数字产品。喜欢探索设计系统、前端技术和咖啡。目前正在构建一些有趣的小工具。',
+            location: '上海, 中国',
+            website: 'alexchen.design',
+            joinDate: '2025年3月',
+            socialLinks: null,
+            projects: null,
+            friends: null
+          };
+        }
+
+        if (data.backgroundImage) {
+          backgroundImageData = data.backgroundImage;
+          applyBackground(data.backgroundImage);
+        } else {
+          backgroundImageData = null;
+          applyBackground(null);
+        }
+
+        renderAvatar(data);
+        nameEl.innerText = data.name || '姓名';
+        titleEl.innerText = data.title || '头衔';
+        bioEl.innerText = data.bio || '简介';
+        locationEl.innerText = data.location || '地点';
+        websiteEl.innerText = data.website || '网站';
+        joinDateEl.innerText = data.joinDate || '日期';
+        renderSocialLinks(data.socialLinks);
+        renderProjects(data.projects);
+        renderFriends(data.friends);
+      }
+
+      // ================= ★ 导入HTML文件 ★ =================
+      async function handleImportFile(file) {
+        if (!file) return;
+
+        // 检查文件类型
+        if (!file.name.endsWith('.html') && !file.name.endsWith('.htm')) {
+          alert('请选择 HTML 文件（.html 或 .htm）');
+          return;
+        }
+
+        try {
+          // 读取文件内容
+          const text = await file.text();
+
+          // 用 DOMParser 解析 HTML
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, 'text/html');
+
+          // 检查是否是有效的个人主页文件（包含关键元素）
+          const importedName = doc.querySelector('#name');
+          if (!importedName) {
+            alert('导入失败：这不是一个有效的个人主页文件。\n请确保使用本工具导出的 HTML 文件。');
+            return;
+          }
+
+          // 确认是否覆盖
+          const confirmImport = confirm('导入将覆盖当前所有内容，确定要继续吗？\n（建议先保存当前内容）');
+          if (!confirmImport) return;
+
+          // ===== 解析导入的数据 =====
+          const newData = {
+            avatar: doc.querySelector('#avatarContent') ? doc.querySelector('#avatarContent').innerText.trim() : 'A',
+            avatarImage: null,
+            backgroundImage: null,
+            name: doc.querySelector('#name') ? doc.querySelector('#name').innerText.trim() : '姓名',
+            title: doc.querySelector('#title') ? doc.querySelector('#title').innerText.trim() : '头衔',
+            bio: doc.querySelector('#bio') ? doc.querySelector('#bio').innerText.trim() : '简介',
+            location: doc.querySelector('#location') ? doc.querySelector('#location').innerText.trim() : '地点',
+            website: doc.querySelector('#website') ? doc.querySelector('#website').innerText.trim() : '网站',
+            joinDate: doc.querySelector('#joinDate') ? doc.querySelector('#joinDate').innerText.trim() : '日期',
+            socialLinks: [],
+            projects: [],
+            friends: []
+          };
+
+          // 解析头像图片（如果导入的文件中有头像图片）
+          const importedAvatarImg = doc.querySelector('#avatarContent img.avatar-image');
+          if (importedAvatarImg && importedAvatarImg.src) {
+            newData.avatarImage = importedAvatarImg.src;
+          }
+
+          // 解析背景图片
+          const importedBody = doc.querySelector('body');
+          if (importedBody) {
+            const bgStyle = importedBody.getAttribute('style') || '';
+            const bgMatch = bgStyle.match(/background-image:\s*url\(['"]?(.*?)['"]?\)/);
+            if (bgMatch && bgMatch[1]) {
+              newData.backgroundImage = bgMatch[1];
+            }
+          }
+
+          // 解析社交链接
+          doc.querySelectorAll('#socialLinksContainer .social-link').forEach(link => {
+            const textSpan = link.querySelector('.link-text');
+            const iconEl = link.querySelector('i');
+            const url = link.getAttribute('href') || link.getAttribute('data-url') || '#';
+            newData.socialLinks.push({
+              text: textSpan ? textSpan.innerText.trim() : '链接',
+              icon: iconEl ? iconEl.className : 'fas fa-link',
+              url: url
+            });
+          });
+
+          // 解析项目
+          doc.querySelectorAll('#projectsList .project-item').forEach(item => {
+            const nameLink = item.querySelector('.project-name a');
+            const descEl = item.querySelector('.project-desc');
+            const iconEl = item.querySelector('.project-icon i');
+            newData.projects.push({
+              name: nameLink ? nameLink.innerText.trim() : '项目名称',
+              url: nameLink ? nameLink.getAttribute('href') : '#',
+              desc: descEl ? descEl.innerText.trim() : '项目描述',
+              icon: iconEl ? iconEl.className : 'fas fa-cube'
+            });
+          });
+
+          // 解析友链
+          doc.querySelectorAll('#friendsList .friend-link').forEach(link => {
+            const textSpan = link.querySelector('.link-text');
+            const iconEl = link.querySelector('i');
+            const url = link.getAttribute('href') || link.getAttribute('data-url') || '#';
+            newData.friends.push({
+              text: textSpan ? textSpan.innerText.trim() : '友链',
+              icon: iconEl ? iconEl.className : 'fas fa-user',
+              url: url
+            });
+          });
+
+          // ===== 应用导入的数据 =====
+          // 头像
+          if (newData.avatarImage) {
+            avatarImageData = newData.avatarImage;
+            renderAvatar({ avatarImage: newData.avatarImage });
+          } else {
+            avatarImageData = null;
+            renderAvatar({ avatar: newData.avatar });
+          }
+
+          // 背景
+          if (newData.backgroundImage) {
+            backgroundImageData = newData.backgroundImage;
+            applyBackground(newData.backgroundImage);
+          } else {
+            backgroundImageData = null;
+            applyBackground(null);
+          }
+
+          // 基本信息
+          nameEl.innerText = newData.name;
+          titleEl.innerText = newData.title;
+          bioEl.innerText = newData.bio;
+          locationEl.innerText = newData.location;
+          websiteEl.innerText = newData.website;
+          joinDateEl.innerText = newData.joinDate;
+
+          // 列表数据
+          renderSocialLinks(newData.socialLinks.length ? newData.socialLinks : null);
+          renderProjects(newData.projects.length ? newData.projects : null);
+          renderFriends(newData.friends.length ? newData.friends : null);
+
+          // 保存到 localStorage
+          saveProfile();
+
+          alert('✅ 导入成功！所有内容已更新。');
+        } catch (err) {
+          console.error(err);
+          alert('导入失败：' + err.message);
+        }
+      }
+
+      // ================= 事件监听 =================
+      function attachListeners() {
+        [nameEl, titleEl, bioEl, locationEl, websiteEl, joinDateEl].forEach(el => {
+          if (!el) return;
+          el.addEventListener('input', debouncedSave);
+          if (el !== bioEl) {
+            el.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+            });
+          }
+        });
+
+        avatarContent.addEventListener('input', () => {
+          if (!avatarImageData) debouncedSave();
+        });
+        avatarContent.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); avatarContent.blur(); }
+        });
+
+        // 社交链接
+        socialLinksContainer.addEventListener('input', (e) => {
+          if (e.target.classList.contains('link-text')) debouncedSave();
+        });
+        socialLinksContainer.addEventListener('keydown', (e) => {
+          if (e.target.classList.contains('link-text') && e.key === 'Enter') {
+            e.preventDefault(); e.target.blur();
+          }
+        });
+        socialLinksContainer.addEventListener('click', (e) => {
+          if (e.target.classList.contains('link-text') || e.target.closest('.link-text')) {
+            e.preventDefault();
+          }
+        });
+        socialLinksContainer.addEventListener('click', (e) => {
+          const removeBtn = e.target.closest('.social-link-remove');
+          if (removeBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const wrapper = removeBtn.closest('.social-link-wrapper');
+            if (wrapper) { wrapper.remove(); saveProfile(); }
+          }
+        });
+
+        // 项目
+        projectsList.addEventListener('input', (e) => {
+          if (e.target.closest('.project-name') || e.target.closest('.project-desc')) debouncedSave();
+        });
+        projectsList.addEventListener('keydown', (e) => {
+          if ((e.target.tagName === 'A' || e.target.classList.contains('project-desc')) && e.key === 'Enter') {
+            e.preventDefault(); e.target.blur();
+          }
+        });
+        projectsList.addEventListener('click', (e) => {
+          const removeBtn = e.target.closest('.project-remove');
+          if (removeBtn) {
+            e.preventDefault();
+            removeBtn.closest('.project-item').remove();
+            saveProfile();
+          }
+        });
+        projectsList.addEventListener('click', (e) => {
+          if (e.target.tagName === 'A' && document.activeElement === e.target) e.preventDefault();
+        });
+
+        // 友链
+        friendsList.addEventListener('input', (e) => {
+          if (e.target.classList.contains('link-text')) debouncedSave();
+        });
+        friendsList.addEventListener('keydown', (e) => {
+          if (e.target.classList.contains('link-text') && e.key === 'Enter') {
+            e.preventDefault(); e.target.blur();
+          }
+        });
+        friendsList.addEventListener('click', (e) => {
+          if (e.target.classList.contains('link-text') || e.target.closest('.link-text')) {
+            e.preventDefault();
+          }
+        });
+        friendsList.addEventListener('click', (e) => {
+          const removeBtn = e.target.closest('.friend-remove');
+          if (removeBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const wrapper = removeBtn.closest('.friend-wrapper');
+            if (wrapper) { wrapper.remove(); saveProfile(); }
+          }
+        });
+
+        // 上传头像（压缩到 400x400，质量 0.85）
+        uploadHint.addEventListener('click', () => avatarUpload.click());
+        avatarWrapper.addEventListener('click', (e) => {
+          if (e.target === avatarWrapper || e.target.classList.contains('avatar-image')) avatarUpload.click();
+        });
+        avatarContent.addEventListener('click', (e) => {
+          if (e.target.classList.contains('avatar-image')) avatarUpload.click();
+        });
+        avatarUpload.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          try {
+            const compressed = await compressImage(file, 400, 400, 0.85);
+            avatarImageData = compressed;
+            renderAvatar({ avatarImage: compressed });
+            saveProfile();
+          } catch (err) {
+            alert('头像处理失败：' + err.message);
+          }
+          avatarUpload.value = '';
+        });
+
+        // 上传背景（压缩到 1920x1080，质量 0.75）
+        uploadBgBtn.addEventListener('click', () => bgUpload.click());
+        bgUpload.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          try {
+            uploadBgBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+            uploadBgBtn.disabled = true;
+
+            const compressed = await compressImage(file, 1920, 1080, 0.75);
+            backgroundImageData = compressed;
+            applyBackground(compressed);
+            saveProfile();
+
+            uploadBgBtn.innerHTML = '<i class="fas fa-image"></i> 更换背景';
+            uploadBgBtn.disabled = false;
+          } catch (err) {
+            alert('背景处理失败：' + err.message);
+            uploadBgBtn.innerHTML = '<i class="fas fa-image"></i> 更换背景';
+            uploadBgBtn.disabled = false;
+          }
+          bgUpload.value = '';
+        });
+
+        // 添加社交链接 -> 弹窗
+        addLinkBtn.addEventListener('click', openLinkModal);
+
+        // 链接弹窗事件
+        modalCloseBtn.addEventListener('click', closeLinkModal);
+        modalCancelBtn.addEventListener('click', closeLinkModal);
+        modalConfirmBtn.addEventListener('click', confirmAddLink);
+        linkModal.addEventListener('click', (e) => {
+          if (e.target === linkModal) closeLinkModal();
+        });
+        linkModal.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeLinkModal();
+          if (e.key === 'Enter' && (e.target === linkUrlInput || e.target === linkTextInput || e.target === linkIconInput)) {
+            e.preventDefault();
+            confirmAddLink();
+          }
+        });
+
+        // 添加项目 -> 弹窗
+        addProjectBtn.addEventListener('click', openProjectModal);
+
+        // 项目弹窗事件
+        projectModalCloseBtn.addEventListener('click', closeProjectModal);
+        projectModalCancelBtn.addEventListener('click', closeProjectModal);
+        projectModalConfirmBtn.addEventListener('click', confirmAddProject);
+        projectModal.addEventListener('click', (e) => {
+          if (e.target === projectModal) closeProjectModal();
+        });
+        projectModal.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeProjectModal();
+          if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            confirmAddProject();
+          }
+        });
+
+        // 添加友链 -> 弹窗
+        addFriendBtn.addEventListener('click', openFriendModal);
+
+        // 友链弹窗事件
+        friendModalCloseBtn.addEventListener('click', closeFriendModal);
+        friendModalCancelBtn.addEventListener('click', closeFriendModal);
+        friendModalConfirmBtn.addEventListener('click', confirmAddFriend);
+        friendModal.addEventListener('click', (e) => {
+          if (e.target === friendModal) closeFriendModal();
+        });
+        friendModal.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeFriendModal();
+          if (e.key === 'Enter' && (e.target === friendUrlInput || e.target === friendTextInput || e.target === friendIconInput)) {
+            e.preventDefault();
+            confirmAddFriend();
+          }
+        });
+
+        // ★ 导入HTML文件
+        importHtmlBtn.addEventListener('click', () => importFileInput.click());
+        importFileInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          handleImportFile(file);
+          importFileInput.value = '';
+        });
+
+        // 支持拖拽导入
+        document.body.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+        });
+        document.body.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const file = e.dataTransfer.files[0];
+          if (file && (file.name.endsWith('.html') || file.name.endsWith('.htm'))) {
+            handleImportFile(file);
+          }
+        });
+      }
+
+      // ================= 导出只读HTML =================
+      function saveAsReadOnlyHtml() {
+        try {
+          saveProfile();
+
+          const docClone = document.documentElement.cloneNode(true);
+
+          docClone.querySelectorAll('[contenteditable]').forEach(el => {
+            el.removeAttribute('contenteditable');
+          });
+
+          docClone.querySelectorAll(
+            '.social-link-remove, .project-remove, .friend-remove, ' +
+            '.add-link-btn, .add-project-btn, .add-friend-btn, ' +
+            '.save-html-btn, .import-html-btn, .avatar-hint, .upload-bg-btn, ' +
+            '#avatarUpload, #bgUpload, #importFileInput, .modal-overlay'
+          ).forEach(el => el.remove());
+
+          docClone.querySelectorAll('script').forEach(el => el.remove());
+
+          const clonedBody = docClone.querySelector('body');
+          if (clonedBody) {
+            clonedBody.classList.add('read-only');
+          }
+
+          const clonedSaveHint = docClone.querySelector('#saveHint');
+          if (clonedSaveHint) {
+            clonedSaveHint.innerHTML = '<i class="fas fa-lock"></i> 只读版本 · 内容不可修改';
+          }
+
+          docClone.querySelectorAll('.social-link .link-text, .friend-link .link-text').forEach(el => {
+            el.style.cursor = 'default';
+            el.style.pointerEvents = 'none';
+          });
+          docClone.querySelectorAll('.project-name a').forEach(a => {
+            a.style.pointerEvents = 'auto';
+          });
+          docClone.querySelectorAll('i').forEach(el => {
+            el.style.pointerEvents = '';
+          });
+
+          const finalHtml = '<!DOCTYPE html>\n' + docClone.outerHTML;
+          const blob = new Blob([finalHtml], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'my-profile-readonly.html';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          alert('导出失败：' + err.message + '\n可能图片过大，请尝试使用更小的图片。');
+          console.error(err);
+        }
+      }
+
+      // ================= 初始化 =================
+      function init() {
+        loadProfile();
+        attachListeners();
+        saveHtmlBtn.addEventListener('click', saveAsReadOnlyHtml);
+      }
+
+      window.addEventListener('DOMContentLoaded', init);
+    })();
+  </script>
+</body>
+</html>
